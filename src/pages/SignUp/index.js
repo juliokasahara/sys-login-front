@@ -1,5 +1,5 @@
 import React, {useContext, useState} from "react";
-import { Platform } from "react-native";
+import { Platform, ActivityIndicator } from "react-native";
 
 import {  Background, Container, AreaInput, Input, SubmitButton,SubmitText} from "../SignIn/styles";
 
@@ -7,7 +7,7 @@ import { AuthContext } from "../../contexts/auth";
 
 export default function SingUp() {
 
-    const { login }  = useContext(AuthContext);
+    const { login, loading }  = useContext(AuthContext);
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [telefone, setTelefone] = useState('');
@@ -15,6 +15,9 @@ export default function SingUp() {
     const [matchingPassword, setMatchingPassword] = useState('');
 
     function handleSingUp() {
+        if(username === '' || email === '' || telefone === '' || password === '' || matchingPassword === '') {
+            return;
+        }
         login(username, email, telefone, password, matchingPassword);
     }
 
@@ -39,7 +42,11 @@ export default function SingUp() {
                 </AreaInput>
 
                 <SubmitButton actveOpacity={0.8} onPress={handleSingUp}>
-                    <SubmitText>Create</SubmitText>
+                        {loading ? (
+                            <ActivityIndicator size={20} color="#FFF"/>
+                        ) : (
+                            <SubmitText>Create</SubmitText>
+                        )}
                 </SubmitButton>
             </Container>
         </Background>

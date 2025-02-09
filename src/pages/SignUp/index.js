@@ -7,7 +7,7 @@ import { AuthContext } from "../../contexts/auth";
 
 export default function SingUp() {
 
-    const { login, loading }  = useContext(AuthContext);
+    const { singUp, loading }  = useContext(AuthContext);
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [telefone, setTelefone] = useState('');
@@ -18,7 +18,7 @@ export default function SingUp() {
         if(username === '' || email === '' || telefone === '' || password === '' || matchingPassword === '') {
             return;
         }
-        login(username, email, telefone, password, matchingPassword);
+        singUp(username, email, telefone, password, matchingPassword);
     }
 
     return (

@@ -1,7 +1,10 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "http://192.168.12.107:8080/api", // rota do back-end
+    baseURL: "http://10.0.2.2:8080/api", // rota do back-end ip expecial para emulador 10.0.2.2
+    headers: {
+        "Content-Type": "application/json"
+    }
 });
 
 export default api;

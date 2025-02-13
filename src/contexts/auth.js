@@ -1,18 +1,45 @@
-import React,{createContext, useState} from "react";
+import React,{createContext, useState, useEffect} from "react";
 import api from "../services/api";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const AuthContext = createContext({});
 
 function AuthProvider({children}) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [loadingHome, setLoadingHome] = useState(true);
 
     const navigation = useNavigation();
+    useEffect(() => {  
+        
+        async function loadStorage() {
+            const storageUser = await AsyncStorage.getItem('@user');
+ 
+            if (storageUser) {
+                const token = storageUser.replace(/^"|"$/g, '');
+                const response = await api.get('/user/me', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                })
+                .catch(() => {
+                    console.log("Erro ao tentar logar com o token do AsyncStorage");
+                    setUser(null);
+                })
+                api.defaults.headers['Authorization'] = `Bearer ${token}`;
+                setUser(response.data.data);
+                setLoadingHome(false);
+                
+            }
+            setLoadingHome(false);
+        }
+        loadStorage();
+    }, []);
 
     async function singUp(username, email, telefone, password, matchingPassword) {
         try{
-            loading(true);
+            setLoading(true);
             const response = await api.post('/user/save', {
                 username: username,
                 email: email,
@@ -21,11 +48,11 @@ function AuthProvider({children}) {
                 matchingPassword: matchingPassword
             })
 
-            loading(false);
+            setLoading(false);
             navigation.goBack();
             console.log("Resposta da API:", response.data);
         } catch (error) {
-            loading(false);
+            setLoading(false);
             console.log("Erro desconhecido:", error);
         }
     }
@@ -33,57 +60,59 @@ function AuthProvider({children}) {
     async function singIn(email, password) {
 
         try {
-            loading(true);
+            setLoading(true);
+            
             const response = await api.post('/auth/login', {
                 email: email,
                 password: password
             });
-
-            console.log("Resposta da API:", response.data);
-            const { email: userEmail, accessToken } = response.data.data;
-
+    
+            console.log("✅ Resposta da API:", response.data);
+            const { email: userEmail, accessToken: token } = response.data.data;
+    
             const data = {
                 userEmail,
-                accessToken,
+                token
             };
-
-            api.defaults.headers['Authorization'] = `Bearer ${accessToken}`;
-
-            setUser({
-                userEmail,
-                accessToken,
-            })
+    
+            // 🔹 Salva o usuário corretamente no AsyncStorage
+            await AsyncStorage.setItem('@user', JSON.stringify(token));
+    
+            // 🔹 Configura o token nos headers da API
+            api.defaults.headers['Authorization'] = `Bearer ${token}`;
+    
+            // 🔹 Atualiza o estado do usuário
+            setUser(data);
+    
+            setLoading(false);  // 🔹 Certifica-se de desligar o loading
 
             // navigation.navigate('Home');
+    
         } catch (error) {
-            loading(false);
+            setLoading(false);  // 🔴 Agora sempre desativa o loading
+    
             console.log("❌ Erro na requisição!");
-        
+    
             if (axios.isAxiosError(error)) {
                 console.log("⚠️ Erro do Axios:", error.message);
-        
+    
                 if (error.response) {
-                    const { status, data, headers } = error.response;
-                    
-                    console.log("📡 Status HTTP:", status);
-                    console.log("📄 Resposta do servidor:", JSON.stringify(data, null, 2));
-                    console.log("🔍 Cabeçalhos da resposta:", headers);
-        
-                    if (data?.fieldErrors) {
-                        Object.entries(data.fieldErrors).forEach(([campo, mensagem]) => {
+                    console.log("📡 Status HTTP:", error.response.status);
+                    console.log("📄 Resposta do servidor:", JSON.stringify(error.response.data, null, 2));
+    
+                    if (error.response.data?.fieldErrors) {
+                        Object.entries(error.response.data.fieldErrors).forEach(([campo, mensagem]) => {
                             console.log(`🚨 Erro no campo '${campo}': ${mensagem}`);
                         });
                     } else {
-                        console.log("⚠️ Mensagem de erro:", data.message || "Erro desconhecido no servidor.");
+                        console.log("⚠️ Mensagem de erro:", error.response.data.message || "Erro desconhecido no servidor.");
                     }
                 } else if (error.request) {
-                    console.log("🕵️‍♂️ Sem resposta do servidor. A requisição foi feita, mas não houve retorno.");
-                    console.log("📡 Detalhes da requisição:", error.request);
+                    console.log("🕵️‍♂️ Sem resposta do servidor.");
                 } else {
                     console.log("❌ Erro inesperado:", error.message);
                 }
             } else {
-                loading(false);
                 console.log("❌ Erro desconhecido:", error);
             }
         }
@@ -91,7 +120,7 @@ function AuthProvider({children}) {
     }
 
     return (
-        <AuthContext.Provider value={{ signed: !!user, user, singIn, singUp , loading }}>
+        <AuthContext.Provider value={{ signed: !!user, user, singIn, singUp , loading, loadingHome }}>
             {children}
         </AuthContext.Provider>
     );

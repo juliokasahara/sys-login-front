@@ -56,6 +56,7 @@ function AuthProvider({children}) {
             setLoading(false);
             console.log("Erro desconhecido:", error);
         }
+        setLoading(false);
     }
 
     async function singIn(email, password) {
@@ -118,7 +119,6 @@ function AuthProvider({children}) {
                 console.log("❌ Erro desconhecido:", error);
             }
         }
-        
     }
 
     async function singOut() {  
@@ -127,8 +127,30 @@ function AuthProvider({children}) {
         })
     }
 
+    async function recoverPassword(email) {
+        try{
+            alert(email)
+            setLoading(true);
+            // const response = await api.post('/user/save', {
+            //     username: username,
+            //     email: email,
+            //     telefone: telefone,
+            //     password: password,
+            //     matchingPassword: matchingPassword
+            // })
+
+            // setLoading(false);
+            // navigation.goBack();
+            // console.log("Resposta da API:", response.data);
+        } catch (error) {
+            setLoading(false);
+            console.log("Erro desconhecido:", error);
+        }
+        setLoading(false);
+    }
+
     return (
-        <AuthContext.Provider value={{ signed: !!user, user, singIn, singUp , singOut, loading, loadingHome }}>
+        <AuthContext.Provider value={{ signed: !!user, user, singIn, singUp , singOut, recoverPassword, loading, loadingHome }}>
             {children}
         </AuthContext.Provider>
     );

@@ -39,6 +39,16 @@ export const SubmitButton = styled.TouchableOpacity`
     margin-top: 10px;
 `;
 
+export const SubmitButtonGreen = styled.TouchableOpacity`
+    width: 90%;
+    height: 45px;
+    border-radius: 8px;
+    background-color:rgb(29, 255, 9);
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+`;
+
 export const SubmitText = styled.Text`
     color: #FFF;
     font-size: 20px;

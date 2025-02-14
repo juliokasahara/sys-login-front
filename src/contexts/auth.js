@@ -28,6 +28,7 @@ function AuthProvider({children}) {
                     setUser(null);
                 })
                 api.defaults.headers['Authorization'] = `Bearer ${token}`;
+                console.log("🔐 Usuário logado:", response.data.data);
                 setUser(response.data.data);
                 setLoadingHome(false);
                 
@@ -68,10 +69,11 @@ function AuthProvider({children}) {
             });
     
             console.log("✅ Resposta da API:", response.data);
-            const { email: userEmail, accessToken: token } = response.data.data;
+            const { email: userEmail, accessToken: token, username } = response.data.data;
     
             const data = {
                 userEmail,
+                username,
                 token
             };
     

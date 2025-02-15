@@ -2,6 +2,7 @@ import React,{createContext, useState, useEffect} from "react";
 import api from "../services/api";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from "axios";
 
 export const AuthContext = createContext({});
 
@@ -62,7 +63,7 @@ function AuthProvider({children}) {
     async function singIn(email, password) {
 
         try {
-            setLoading(true);
+            setLoadingHome(true);
             
             const response = await api.post('/auth/login', {
                 email: email,
@@ -87,38 +88,43 @@ function AuthProvider({children}) {
             // 🔹 Atualiza o estado do usuário
             setUser(data);
     
-            setLoading(false);  // 🔹 Certifica-se de desligar o loading
+            setLoadingHome(false);  // 🔹 Certifica-se de desligar o loading
 
             // navigation.navigate('Home');
     
         } catch (error) {
-            setLoading(false);  // 🔴 Agora sempre desativa o loading
-    
-            console.log("❌ Erro na requisição!");
-    
+            setLoadingHome(false); // 🔴 Agora sempre desativa o loading
+        
             if (axios.isAxiosError(error)) {
-                console.log("⚠️ Erro do Axios:", error.message);
-    
+                let errorMessage = "";
+        
                 if (error.response) {
-                    console.log("📡 Status HTTP:", error.response.status);
-                    console.log("📄 Resposta do servidor:", JSON.stringify(error.response.data, null, 2));
-    
-                    if (error.response.data?.fieldErrors) {
-                        Object.entries(error.response.data.fieldErrors).forEach(([campo, mensagem]) => {
-                            console.log(`🚨 Erro no campo '${campo}': ${mensagem}`);
+                    const { data } = error.response;
+        
+                    if (data?.message) {
+                        errorMessage += `⚠️ Mensagem: ${data.message}\n`;
+                    }
+        
+                    // ✅ Ajuste para acessar corretamente fieldErrors
+                    const fieldErrors = data?.data?.fieldErrors; 
+                    if (fieldErrors) {
+                        errorMessage += "\n🚨 Erros nos campos:\n";
+                        Object.entries(fieldErrors).forEach(([campo, mensagem]) => {
+                            errorMessage += `🔹 ${campo}: ${mensagem}\n`;
                         });
-                    } else {
-                        console.log("⚠️ Mensagem de erro:", error.response.data.message || "Erro desconhecido no servidor.");
                     }
                 } else if (error.request) {
-                    console.log("🕵️‍♂️ Sem resposta do servidor.");
+                    errorMessage += "🕵️‍♂️ Sem resposta do servidor.";
                 } else {
-                    console.log("❌ Erro inesperado:", error.message);
+                    errorMessage += `❌ Erro inesperado: ${error.message}`;
                 }
+        
+                alert(errorMessage);
             } else {
-                console.log("❌ Erro desconhecido:", error);
+                alert(`❌ Erro desconhecido: ${error}`);
             }
         }
+        
     }
 
     async function singOut() {  

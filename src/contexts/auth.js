@@ -124,7 +124,6 @@ function AuthProvider({children}) {
                 alert(`❌ Erro desconhecido: ${error}`);
             }
         }
-        
     }
 
     async function singOut() {  
@@ -135,24 +134,45 @@ function AuthProvider({children}) {
 
     async function recoverPassword(email) {
         try{
-            alert(email)
             setLoading(true);
-            // const response = await api.post('/user/save', {
-            //     username: username,
-            //     email: email,
-            //     telefone: telefone,
-            //     password: password,
-            //     matchingPassword: matchingPassword
-            // })
+            const response = await api.post('/user/recover-password', {
+                email: email,
+            })
 
-            // setLoading(false);
-            // navigation.goBack();
-            // console.log("Resposta da API:", response.data);
-        } catch (error) {
             setLoading(false);
-            console.log("Erro desconhecido:", error);
+            navigation.goBack();
+            console.log("Resposta da API:", response.response);
+        } catch (error) {
+            // alerta log padrao app  
+            setLoading(false);    
+            if (axios.isAxiosError(error)) {  
+                if (error.response) {
+                    let errorMessage = "";
+                    const { status, data } = error.response;
+                    if (data?.message) {
+                        errorMessage += `⚠️ Mensagem: ${data.message}\n`;
+                    }                  
+                    const fieldErrors = data?.data?.fieldErroaars; 
+                    if (fieldErrors) {
+                        errorMessage += "\n🚨 Erros nos campos:\n";
+                        Object.entries(fieldErrors).forEach(([campo, mensagem]) => {
+                            errorMessage += `🔹 ${campo}: ${mensagem}\n`;
+                        });
+                    }
+                    alert(errorMessage);
+                } else if (error.request) {
+                    errorMessage += "🕵️‍♂️ Sem resposta do servidor.";
+                } else {
+                    errorMessage += `❌ Erro inesperado: ${error.message}`;
+                }
+        
+                alert(errorMessage);
+            } else {
+                alert(`❌ Erro desconhecido: ${error}`);
+            }
+            setLoading(false);
+            // alerta log padrao app   
         }
-        setLoading(false);
     }
 
     return (
